@@ -32,14 +32,13 @@ wget -O docids.txt $TREC_DOCIDS
 
 TERRIER_LATEST="https://github.com/terrier-org/terrier-core/releases/download/v5.2/terrier-project-5.2-bin.tar.gz"
 
-alias untar='tar xvf '
-
 # Download and untar all corpus and the Terrier tool
 
 for file in $COMM_USE_DATASET $NON_COMM_USE_DATASET $CUSTOM_LICENSE_DATASET $BIORXIV_DATASET $TERRIER_LATEST
 do
     wget $file
-    untar $file
+    bname=$(basename $file)
+    tar xvf $bname
 done
 
 echo "Parsing corpus (slowest part)"
