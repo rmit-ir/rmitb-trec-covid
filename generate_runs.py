@@ -11,6 +11,7 @@ paths = [line[2:] for line in subprocess.check_output("find . -name *.res", shel
 runs = dict()
 
 def do_min_max(runs, runid, uqvid, maxscore, minscore):
+    print(str(runid) + "##" + str(uqvid) + "##" + str(maxscore) + "$$" + str(minscore))
     for i in range(len(runs[runid][uqvid])):
         score = runs[runid][uqvid][i][1]
         z = (score - minscore) / (maxscore - minscore)
@@ -21,11 +22,11 @@ runid = 0
 for path in paths:
     print(path)
     runs[runid] = dict() 
+    maxscore = 0.0
+    minscore = 0.0
+    current_uqvid = ""
+
     with open(path) as f:
-        linecount = 1
-        maxscore = 0.0
-        minscore = 0.0
-        current_uqvid = ""
         for line in f:
             spl = line.split()
             uqvid = spl[0]
@@ -48,6 +49,8 @@ for path in paths:
                 minscore = score
 
             runs[runid][uqvid].append([docid, score])
+    
+    do_min_max(runs, runid, current_uqvid, maxscore, minscore)
             
     runid += 1
 
@@ -63,7 +66,7 @@ for topic in range(1, topic_count + 1):
     fusedruns[0][topic] = []
     docscores = dict()
     for uqv in range(1, uqv_count):
-        for runid in range(0, system_count - 1):
+        for runid in range(0, system_count):
             for pair in runs[runid][str(topic) + "-" + str(uqv)]:
                 if pair[0] in docscores:
                     docscores[pair[0]] += pair[1]
@@ -74,6 +77,8 @@ for topic in range(1, topic_count + 1):
     sorted_docscores = sorted(docscores.items(), key=operator.itemgetter(1), reverse=True)
     rank = 0
     maxscore = 0
+    max_was_reached = False
+    last_score = 0.0
     for pair in sorted_docscores:
         if rank == 0:
             maxscore = pair[1]
@@ -83,8 +88,14 @@ for topic in range(1, topic_count + 1):
 
         if rank == 999:
             do_min_max(fusedruns, 0, topic, maxscore, pair[1])
+            max_was_reached = True
             break
+
+        last_score = pair[1]
         rank += 1
+
+    if max_was_reached == False:
+        do_min_max(fusedruns, 0, topic, maxscore, last_score)
 
 f.close()
 
